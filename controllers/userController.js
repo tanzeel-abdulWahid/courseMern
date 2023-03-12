@@ -33,6 +33,7 @@ export const register = asyncHandler( async (req, res) => {
     sendToken(res, user, "registered Successful", 201)
 });
 
+//! Login Api
 export const login = asyncHandler( async (req, res) => {
     const { email, password} = req.body;
 
@@ -50,6 +51,7 @@ export const login = asyncHandler( async (req, res) => {
     sendToken(res, user, "welcome back", 200)
 });
 
+//! Logout Api
 export const logout = asyncHandler(async (req,res) => {
     res.status(200).cookie("token", '',{
         expires: new Date(Date.now()),
@@ -57,5 +59,66 @@ export const logout = asyncHandler(async (req,res) => {
     }).json({
         success: true,
         message:"Logged out successfully"
+    })
+})
+
+
+//! Get My profile
+export const getMyProfile = asyncHandler(async (req,res) => {
+    // ! console.log("GET MY PROFILE",req.user) (getting from middleware) 
+    const user = await User.findById(req.user._id)
+
+    res.status(200).json({
+        success: true,
+        user
+    })
+})
+
+
+//! Change password
+export const changePassword = asyncHandler(async (req,res) => {
+
+    const {oldPassword, newPassword} = req.body;
+    if (!oldPassword || !newPassword) return res.status(400).json({message: "Please enter all fields"})
+    
+    const user = await User.findById(req.user._id).select("+password")
+
+    const isMatch = await user.comparePassword(oldPassword);
+    if (!isMatch) return res.status(401).json({success: false,message: "invalid credentials"})
+
+    user.password = newPassword
+
+    await user.save()
+
+    res.status(200).json({
+        success: true,
+        message:"Password changed successfully"
+    })
+})
+
+
+//! Update Profile
+export const updateProfile = asyncHandler(async (req,res) => {
+
+    const {name,email} = req.body;
+    const user = await User.findById(req.user._id).select("+password")
+
+    if(name) user.name = name
+    if(email) user.email = email
+
+    await user.save();
+
+    res.status(200).json({
+        success: true,
+        message:"Profile updated successfully"
+    })
+})
+
+//!update Profile Pic
+//TODO
+export const updateProfilePic = asyncHandler(async(req,res) => {
+    res.status(200).json({
+        success:true,
+        message:"Profile Pic updated "
     })
 })
