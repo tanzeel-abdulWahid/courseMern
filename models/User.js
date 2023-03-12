@@ -72,11 +72,11 @@ schema.pre("save", async function(next) {
 
 //these methods are availabe on each doc that is created from this sceham
 schema.methods.getJWTToken = function() {
-    return jwt.sign({_id: this._id}, process.env.JWT_SECRET),
+    return jwt.sign({_id: this._id}, process.env.JWT_SECRET,
     {
         expiresIn: '15d',
-    }
-}
+    });
+};
 
 schema.methods.comparePassword = async function(password) {
     // console.log(this.password)
