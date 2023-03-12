@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import validator from "validator";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt"
 const schema = new mongoose.Schema({
     name:{
         type:String,
@@ -58,12 +59,31 @@ const schema = new mongoose.Schema({
     
 })
 
-//these methods are availabe on eacd doc that is created from this sceham
+//Before saving doc in DB
+schema.pre("save", async function(next) {
+
+    // Dont re hash the pass if it is not modified
+    if (!this.isModified("password")) return next();
+
+    const hashedPassword = await bcrypt.hash(this.password, 10)
+    this.password = hashedPassword;
+    next();
+})
+
+//these methods are availabe on each doc that is created from this sceham
 schema.methods.getJWTToken = function() {
     return jwt.sign({_id: this._id}, process.env.JWT_SECRET),
     {
         expiresIn: '15d',
     }
 }
+
+schema.methods.comparePassword = async function(password) {
+    // console.log(this.password)
+    return await bcrypt.compare(password, this.password)
+}
+
+
+
 
 export const User = mongoose.model("User",schema)
