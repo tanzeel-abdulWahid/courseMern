@@ -1,5 +1,5 @@
 import express from 'express';
-import { changePassword, getAllUsers, getMyProfile, login, logout, register, updateProfile, updateProfilePic } from '../controllers/userController.js';
+import { changePassword, forgetPassword, getAllUsers, getMyProfile, login, logout, register, resetPassword, updateProfile, updateProfilePic } from '../controllers/userController.js';
 import { isAuthenticated } from '../middlewares/auth.js';
 
 const router = express.Router();
@@ -22,8 +22,9 @@ router.route("/updateProfile").put(isAuthenticated, updateProfile)
 router.route("/updateProfilePic").put(isAuthenticated, updateProfilePic)
 
 // Forget password
+router.route("/forgetPassword").post(forgetPassword)
 //reset Password
-
+router.route("/resetPassword/:token").put(resetPassword)
 //Add to playlist
 //Remove from playlist
 

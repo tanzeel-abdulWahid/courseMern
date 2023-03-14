@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 import validator from "validator";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt"
+import bcrypt from "bcrypt";
+import crypto from "crypto";
 const schema = new mongoose.Schema({
     name:{
         type:String,
@@ -77,6 +78,15 @@ schema.methods.getJWTToken = function() {
         expiresIn: '15d',
     });
 };
+
+schema.methods.getResetToken = function(){
+    const resetToken = crypto.randomBytes(20).toString('hex');
+
+    //uses SHA256 algo to hash data
+    this.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    this.resetPasswordExpire = Date.now() + 15 * 60 * 1000; //15 mins exp time
+    return resetToken;
+}
 
 schema.methods.comparePassword = async function(password) {
     // console.log(this.password)

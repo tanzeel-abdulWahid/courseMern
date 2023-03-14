@@ -122,3 +122,29 @@ export const updateProfilePic = asyncHandler(async(req,res) => {
         message:"Profile Pic updated "
     })
 })
+
+//! forgetPassword
+export const forgetPassword = asyncHandler(async(req,res) => {
+
+    const {email} = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) return res.status(400).json({message: "User Not Found"})
+
+    const resetToken = await user.getResetToken();
+    //send Token via email
+    console.log("RESET TOKEN", resetToken)
+
+    res.status(200).json({
+        success:true,
+        message:`Reset Token sent to ${user.email}`
+    })
+})
+
+//!resetPassword
+export const resetPassword = asyncHandler(async(req,res) => {
+    res.status(200).json({
+        success:true,
+        message:"Profile Pic updated "
+    })
+})
