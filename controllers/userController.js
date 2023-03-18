@@ -1,6 +1,8 @@
 import asyncHandler from "express-async-handler";
 import { User } from "../models/User.js"
+import { sendEmail } from "../utils/sendEmail.js";
 import { sendToken } from "../utils/sendToken.js";
+import crypto from "crypto";
 
 export const getAllUsers = (req, res, next) => {
     res.send("User controller")
@@ -132,8 +134,13 @@ export const forgetPassword = asyncHandler(async(req,res) => {
     if (!user) return res.status(400).json({message: "User Not Found"})
 
     const resetToken = await user.getResetToken();
+    // console.log("RESET TOKEN", resetToken)
+    await user.save();
     //send Token via email
-    console.log("RESET TOKEN", resetToken)
+    const url = `${process.env.FRONTEND_URL}/resettoken/${resetToken}`;
+    const message = `Click on the link to reset to your password. ${url}. If you have not requested then please ignore`
+
+    await sendEmail(user.email, "Course Bundler Reset Password", message)
 
     res.status(200).json({
         success:true,
@@ -143,8 +150,29 @@ export const forgetPassword = asyncHandler(async(req,res) => {
 
 //!resetPassword
 export const resetPassword = asyncHandler(async(req,res) => {
+
+    //* this is the token we sent on forgetPassword controller
+    const {token} = req.params;
+
+    //*comparing this token with the token in db.
+    const resetPasswordToken = crypto.createHash('sha256').update(token).digest('hex');
+    const user = await User.findOne({
+        resetPasswordToken,
+        resetPasswordExpire:{
+            $gt: Date.now(),
+        }
+    })
+    console.log(user)
+
+    if (!user) return res.status(400).json({message: "Token is invalid or expired"})
+    //*Update password
+    user.password = req.body.password;
+    user.resetPasswordExpire=undefined;
+    user.resetPasswordToken=undefined;
+    user.save()
+
     res.status(200).json({
         success:true,
-        message:"Profile Pic updated "
+        message:"Password Changed Successfully",
     })
 })
