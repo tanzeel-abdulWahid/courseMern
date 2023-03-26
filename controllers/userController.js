@@ -1,5 +1,6 @@
 import asyncHandler from "express-async-handler";
-import { User } from "../models/User.js"
+import { User } from "../models/User.js";
+import { Course } from "../models/Course.js";
 import { sendEmail } from "../utils/sendEmail.js";
 import { sendToken } from "../utils/sendToken.js";
 import crypto from "crypto";
@@ -169,10 +170,56 @@ export const resetPassword = asyncHandler(async(req,res) => {
     user.password = req.body.password;
     user.resetPasswordExpire=undefined;
     user.resetPasswordToken=undefined;
-    user.save()
+    await user.save()
 
     res.status(200).json({
         success:true,
         message:"Password Changed Successfully",
+    })
+})
+
+//! add to playlist
+export const addToPlaylist = asyncHandler(async(req,res) => {
+    //* getting this from middleware
+    const user = await User.findById(req.user._id);
+
+    const course = await Course.findById(req.body.id);
+    if (!course) return res.status(404).json({message: "Invalid course ID"})
+
+    //* Checking if course already exists in Users playlist
+    const playlistExists = user.playlist.find((item) => {
+        if (item.course.toString() === course._id.toString()) return true
+    })
+    if (playlistExists) return res.status(409).json({message: "Course already exists in playlist"})
+    
+    user.playlist.push({
+        course: course._id,
+        poster: course.poster.url,
+    });
+
+    await user.save();
+
+    res.status(200).json({
+        success:true,
+        message:"Added to playlist",
+    })
+})
+
+export const removeFromPlaylist = asyncHandler(async(req,res) => {
+    //* getting this from middleware
+    const user = await User.findById(req.user._id);
+    
+    const course = await Course.findById(req.query.id);
+    if (!course) return res.status(404).json({message: "Invalid course ID"})
+
+    const newPlaylist = user.playlist.filter((item) => {
+        if (item.course.toString() !== course._id.toString()) return item;
+    })
+    user.playlist = newPlaylist;
+    await user.save();
+
+    res.status(200).json({
+        success:true,
+        message:"removed from playlist",
     })
 })

@@ -39,13 +39,13 @@ const schema = new mongoose.Schema({
             required:true,
         },
     },
-    playlist:{
+    playlist:[{
         course:{
             type:mongoose.Schema.Types.ObjectId,
             ref:"Course"
         },
         poster:String
-    },
+    }],
     createdAt:{
         type:Date,
         default:Date.now,
