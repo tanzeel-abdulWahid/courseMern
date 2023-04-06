@@ -17,13 +17,11 @@ export const getAllCourses = asyncHandler(async (req, res) => {
 export const createCourse = asyncHandler(async (req, res) => {
 
     const { title, description, category, createdBy } = req.body;
+    if (!title || !description || !category || !createdBy) return res.status(400).json({ message: "All fields are required" })
 
     // File well recieve from frntend
     const file = req.file;
     // console.log("file", file);
-
-    if (!title || !description || !category || !createdBy) return res.status(400).json({ message: "All fields are required" })
-
     const fileUri = getDataUri(file);
     const myCloud = await cloudinary.v2.uploader.upload(fileUri.content);
 
