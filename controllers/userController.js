@@ -7,10 +7,6 @@ import cloudinary from 'cloudinary';
 import crypto from "crypto";
 import getDataUri from "../utils/dataUri.js";
 
-export const getAllUsers = (req, res, next) => {
-    res.send("User controller")
-}
-
 //! Register API
 export const register = asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
@@ -243,5 +239,77 @@ export const removeFromPlaylist = asyncHandler(async (req, res) => {
     res.status(200).json({
         success: true,
         message: "removed from playlist",
+    })
+})
+
+
+//*  Admin Controller
+export const getAllUsers = asyncHandler(async (req, res) => {
+
+    const users = await User.find({})
+
+    res.status(200).json({
+        success: true,
+        users
+    })
+})
+
+//*  updateUserRole Controller
+export const updateUserRole = asyncHandler(async (req, res) => {
+
+    const user = await User.findById(req.params.id);
+    // console.log("USER ",user)
+
+    if (!user) return res.status(404).json({ message: "User not found" })
+    if (user.role === "user") user.role = "admin"
+    else user.role = "user"
+
+    await user.save();
+
+    res.status(200).json({
+        success: true,
+        message:"Role updated"
+    })
+})
+
+
+//*  delete Controller (for admin)
+export const deleteUser = asyncHandler(async (req, res) => {
+
+    const user = await User.findById(req.params.id);
+    // console.log("USER ",user)
+
+    if (!user) return res.status(404).json({ message: "User not found" })
+
+    await cloudinary.v2.uploader.destroy(user.avatar.public_id)
+
+    //Cancel subscription
+
+    await user.remove();
+
+    res.status(200).json({
+        success: true,
+        message:"User deleted Successfully"
+    })
+})
+
+
+
+//*  delete my profile (For user)
+export const deleteMyProfile = asyncHandler(async (req, res) => {
+
+    const user = await User.findById(req.user._id);
+    // console.log("USER ",user)
+    await cloudinary.v2.uploader.destroy(user.avatar.public_id)
+
+    //Cancel subscription
+
+    await user.remove();
+
+    //Logout also by clearing cookie when user deletes its profile
+    res.status(200).cookie("token",null,{expires: new Date(Date.now())}
+    ).json({
+        success: true,
+        message:"User deleted Successfully"
     })
 })
