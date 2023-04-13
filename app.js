@@ -2,6 +2,7 @@ import express from "express"
 import { config } from "dotenv";
 import course from "./routes/courseRoutes.js"
 import users from "./routes/userRoutes.js"
+import payment from "./routes/paymentRoutes.js"
 import errorHandler from "./middlewares/Error.js";
 import cookieParser from "cookie-parser";
 config({
@@ -18,6 +19,8 @@ app.use(cookieParser())
 
 app.use("/api/v1",course)
 app.use("/api/v1",users)
+app.use("/api/v1",payment)
+
 
 
 
